@@ -12,21 +12,26 @@ struct circular
 
 struct circular* circular_init(struct circular* c, size_t max_len)
 {
-  if (c) {
-    if (max_len) {
-      *c = (struct circular) {
-        .max_len = max_len,
-        .tab = malloc(sizeof(double[max_len])),
-      };
+    if (!c) return NULL;
 
-      if (!c->tab) {
+    if (!max_len) {
+        c->start = 0;
+        c->len = 0;
         c->max_len = 0;
-      }
-    } else {
-      *c = (struct circular) { 0 };
+        c->tab = NULL;
+        return c;
     }
-  }
-  return c;
+
+    c->start = 0;
+    c->len = 0;
+    c->max_len = max_len;
+    c->tab = malloc(sizeof(double[max_len]));
+    
+    if (!c->tab) {
+        c->max_len = 0;
+    }
+
+    return c;
 }
 
 void circular_destroy(struct circular* c)
@@ -46,52 +51,44 @@ static size_t circular_getpos(struct circular* c, size_t pos)
 
 double* circular_element(struct circular* c, size_t pos)
 {
-  double* ret = 0;
-  if (c) {
-    if (pos < c->max_len) {
-      pos = circular_getpos(c, pos);
-      ret = &c->tab[pos];
-    }
-  }
-  return ret;
+  if (!c || pos >= c->max_len)
+    return NULL;
+    
+  pos = circular_getpos(c, pos);
+  return &c->tab[pos];
 }
 
 struct circular* circular_resize(struct circular* c, size_t new_len)
 {
-  if (c) {
-    size_t len = c->len;
-    if (len > new_len) return 0;
-    size_t old_len = c->max_len;
+  if (!c || c->len > new_len)
+    return NULL;
+  
+  if (new_len == c->max_len)
+    return c;
 
-    if (new_len != old_len) {
-      size_t ostart = circular_getpos(c, 0);
-      size_t nstart = ostart;
-      double* otab = c->tab;
-      double* ntab;
+  size_t ostart = circular_getpos(c, 0);
+  double* ntab = realloc(c->tab, sizeof(double) * new_len);
+  if (!ntab)
+    return NULL;
 
-      if (new_len > old_len) {
-        ntab = realloc(c->tab, sizeof(double[new_len]));
-        if (!ntab) return 0;
-        if (ostart + len > old_len) {
-          size_t ulen = old_len - ostart;
-          size_t llen = len - ulen;
-          if (llen <= (new_len - old_len)) {
-            memcpy(ntab + old_len, otab, llen*sizeof(double));
-          } else {
-            nstart = new_len - ulen;
-            memmove(ntab + nstart, ntab + ostart, ulen*sizeof(double));
-          }
-        }
-      }
-      
-      *c = (struct circular) {
-        .max_len = new_len,
-        .start = nstart,
-        .len = len,
-        .tab = ntab,
-      };
+  // Reorganiza os dados apenas se necessário quando aumentar o tamanho
+  if (new_len > c->max_len && ostart + c->len > c->max_len) {
+    size_t ulen = c->max_len - ostart;
+    size_t llen = c->len - ulen;
+    
+    // Escolhe o método mais eficiente de reorganização
+    if (llen <= (new_len - c->max_len)) {
+      memcpy(ntab + c->max_len, ntab, llen * sizeof(double));
+    } else {
+      size_t nstart = new_len - ulen;
+      memmove(ntab + nstart, ntab + ostart, ulen * sizeof(double));
+      ostart = nstart;
     }
   }
+
+  c->tab = ntab;
+  c->max_len = new_len;
+  c->start = ostart;
   return c;
 }
 
