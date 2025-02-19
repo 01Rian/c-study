@@ -1,68 +1,68 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void merge(int array[], int p, int q, int r)
+void merge(int array[], int inicio_array, int meio_array, int fim_array)
 {
-  int n1 = q - p + 1;
-  int n2 = r - p;
+  int tamanho_esquerda = meio_array - inicio_array + 1;
+  int tamanho_direita = fim_array - inicio_array;
 
-  int L[n1]; 
-  int M[n2];
+  int sub_array_esquerda[tamanho_esquerda]; 
+  int sub_array_direita[tamanho_direita];
 
-  for (size_t i = 0; i < n1; i++)
+  for (size_t i = 0; i < tamanho_esquerda; i++)
   {
-    L[i] = array[p + i];
+    sub_array_esquerda[i] = array[inicio_array + i];
   }
-  for (size_t j = 0; j < n2; j++)
+  for (size_t j = 0; j < tamanho_direita; j++)
   {
-    M[j] = array[q + 1 + j];
+    sub_array_direita[j] = array[meio_array + 1 + j];
   }
   
-  int i, j, k;
-  i = 0;
-  j = 0;
-  k = p;
+  int posicao_esquerda, posicao_direita, posicao_array;
+  posicao_esquerda = 0;
+  posicao_direita = 0;
+  posicao_array = inicio_array;
 
-  while (i < n1 && j < n2)
+  while (posicao_esquerda < tamanho_esquerda && posicao_direita < tamanho_direita)
   {
-    if (L[i] <= M[j])
+    if (sub_array_esquerda[posicao_esquerda] <= sub_array_direita[posicao_direita])
     {
-      array[k] = L[i];
-      i++;
+      array[posicao_array] = sub_array_esquerda[posicao_esquerda];
+      posicao_esquerda++;
     }
     else
     {
-      array[k] = M[j];
-      j++;
+      array[posicao_array] = sub_array_direita[posicao_direita];
+      posicao_direita++;
     }
-    k++;
+    posicao_array++;
   }
   
-  while (i < n1)
+  while (posicao_esquerda < tamanho_esquerda)
   {
-    array[k] = L[i];
-    i++;
-    k++;
+    array[posicao_array] = sub_array_esquerda[posicao_esquerda];
+    posicao_esquerda++;
+    posicao_array++;
   }
 
-  while (j < n2)
+  while (posicao_direita < tamanho_direita)
   {
-    array[k] = M[j];
-    j++;
-    k++;
+    array[posicao_array] = sub_array_direita[posicao_direita];
+    posicao_direita++;
+    posicao_array++;
   }
 }
 
-void merge_sort(int array[], int l, int r)
+void merge_sort(int array[], int inicio, int fim)
 {
-  if (l < r)
+  if (inicio < fim)
   {
-    int m = l + (r - l) / 2;
+    int meio = inicio + (fim - inicio) / 2;
 
-    merge_sort(array, l, m);
-    merge_sort(array, m + 1, r);
+    merge_sort(array, inicio, meio);
+    merge_sort(array, meio + 1, fim);
 
-    merge(array, l, m, r);
+    merge(array, inicio, meio, fim);
   }
 }
 
